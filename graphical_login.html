@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shuffled Image Grid with Selection</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100vh;
+      background-color: #f1f1f1;
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin: 20px 0;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(5, 100px);
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .grid-item {
+      width: 100px;
+      height: 100px;
+      border: 2px solid #ccc;
+      cursor: pointer;
+    }
+
+    .grid-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .grid-item.selected {
+      border-color: #007bff;
+    }
+
+    #submitBtn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+
+    .direction-arrow {
+      font-size: 48px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Shuffled Image Grid with Selection</h1>
+  <div class="container">
+    <div class="grid-container">
+      <!-- Add images here using JavaScript -->
+    </div>
+    <div class="direction-arrow" id="direction">
+      <!-- Arrow direction will be added dynamically -->
+    </div>
+    <button id="submitBtn">Submit</button>
+  </div>
+  <script>
+    const images = [
+      './images/a.png', './images/b.jpg', './images/c.png', './images/d.png', './images/e.png',
+      './images/f.png', './images/g.jpg', './images/h.png', './images/i.png', './images/j.png',
+      './images/k.png', './images/l.png', './images/m.png', './images/n.png', './images/o.png',
+      './images/p.png', './images/q.png', './images/r.png', './images/s.png', './images/t.png',
+      './images/u.png', './images/v.jpg', './images/w.png', './images/x.jpg', './images/y.png'
+      // Add more image paths as needed
+    ];
+
+    const directions = ['&larr;', '&rarr;', '&uarr;', '&darr;'];
+    const directionElement = document.getElementById('direction');
+    const gridContainer = document.querySelector('.grid-container');
+    const submitButton = document.getElementById('submitBtn');
+
+    function createGridItem(imagePath, row, col) {
+      const gridItem = document.createElement('div');
+      gridItem.classList.add('grid-item');
+      gridItem.setAttribute('data-row', row);
+      gridItem.setAttribute('data-col', col);
+
+      const image = document.createElement('img');
+      image.src = imagePath;
+      gridItem.appendChild(image);
+
+      return gridItem;
+    }
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function populateGrid() {
+      const shuffledImages = shuffle(images);
+      let index = 0;
+      for (let row = 0; row < 5; row++) {
+        for (let col = 0; col < 5; col++) {
+          const imagePath = shuffledImages[index];
+          const gridItem = createGridItem(imagePath, row, col);
+          gridContainer.appendChild(gridItem);
+          index++;
+        }
+      }
+    }
+
+    populateGrid();
+
+    const gridItems = document.querySelectorAll('.grid-item');
+    const selectedItems = [];
+
+    directionElement.innerHTML = directions[Math.floor(Math.random() * directions.length)];
+
+    gridItems.forEach(item => {
+      item.addEventListener('click', () => {
+        item.classList.toggle('selected');
+
+        const row = parseInt(item.getAttribute('data-row'));
+        const col = parseInt(item.getAttribute('data-col'));
+
+        const index = selectedItems.findIndex(selectedItem => selectedItem.row === row && selectedItem.col === col);
+
+        if (index === -1) {
+          selectedItems.push({ row, col });
+        } else {
+          selectedItems.splice(index, 1);
+        }
+      });
+    });
+
+    submitButton.addEventListener('click', () => {
+        console.log('Submitting selected items and direction...');
+        
+        const direction = directionElement.innerHTML; // Get the direction from the HTML element
+        
+        const data = {
+            selectedItems: selectedItems,
+            direction: direction,
+            images:images
+        };
+
+        fetch('/submit', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data) // Send both selectedItems and direction
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Submission successful');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    });
+
+
+  </script>
+</body>
+
+</html>
